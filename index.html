@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Giáng Sinh – Đúng có quà, sai có yêu thương</title>
+<style>
+:root{--red:#b51f35;--green:#17633e;--cream:#fffdf8;--ink:#26352c;--muted:#68756d;--line:#e5e9e3}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#f7fff9,#fff8f7);color:var(--ink);font:16px system-ui,-apple-system,Segoe UI,sans-serif}
+header{background:linear-gradient(135deg,#a9162d,#cf3443 55%,#12613d);color:white;text-align:center;padding:30px 16px 25px}
+header .icons{font-size:27px}h1{font-size:clamp(38px,8vw,58px);margin:5px 0;font-weight:900;letter-spacing:2px}header p{margin:0;font-size:15px;letter-spacing:.5px}
+main{max-width:760px;margin:20px auto;padding:0 14px 45px}.card{background:white;border:1px solid var(--line);border-radius:17px;padding:18px;margin:14px 0;box-shadow:0 5px 20px #173c2410}
+h2,h3{margin:0 0 12px}p{line-height:1.55}.muted{color:var(--muted);font-size:13px}
+label{display:block;font-weight:650;margin:10px 0 5px}input,textarea,select{width:100%;padding:11px 12px;border:1px solid #cfd8d0;border-radius:10px;font:inherit;background:#fff;color:#243329}
+textarea{resize:vertical}button{border:0;border-radius:11px;padding:12px 16px;font:inherit;font-weight:750;cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}.primary{background:var(--red);color:#fff}.green{background:var(--green);color:white}.plain{background:#eef4ef;color:#244332;border:1px solid #dbe5dc}.row{display:flex;gap:9px;flex-wrap:wrap}.row>*{flex:1}.notice{background:#fff5e9;border-left:4px solid #d99a34;padding:12px;border-radius:9px;font-size:14px}
+.choice{display:flex;align-items:flex-start;gap:10px;border:1px solid var(--line);border-radius:11px;padding:12px;margin:8px 0;cursor:pointer}.choice input{width:auto;margin-top:5px;accent-color:var(--green)}
+.hidden{display:none!important}.topline{display:flex;justify-content:space-between;gap:12px;align-items:center}.pill{background:#e9f4ec;color:var(--green);border-radius:30px;padding:5px 10px;font-size:12px;font-weight:750}
+.timer{font-weight:900;font-size:23px;color:var(--red);font-variant-numeric:tabular-nums}.progress{height:8px;background:#edf1ed;border-radius:10px;overflow:hidden;margin:12px 0}.progress span{display:block;height:100%;background:var(--green);width:0}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:9px;border-bottom:1px solid var(--line)}.qbox{border:1px solid var(--line);padding:13px;border-radius:12px;margin:12px 0}.qbox small{color:var(--muted)}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:12px}
+</style>
+<!-- Firebase SDK: phiên bản compat để có thể chạy từ một file HTML -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+</head>
+<body>
+<header><div class="icons">❄️ 🎅🏻 🦌 ❄️</div><h1>GIÁNG SINH</h1><p>Đúng có quà, sai có yêu thương.</p><div class="icons" style="margin-top:13px">🎄 ✨ 🎁 ✨ 🎄</div><p style="font-size:11px;margin-top:9px">CHRISTMAS SPECIAL</p></header>
+<main>
+<div class="topline"><span class="muted">❄️ Mùa lễ hội – Mùa sẻ chia</span><button id="adminToggle" class="plain">⚙️ Quản trị viên</button></div>
+
+<section id="home">
+ <div class="card">
+  <h2>🎁 Chào mừng bạn!</h2>
+  <p>12 thử thách đang chờ bạn. Hãy vận dụng kiến thức, khả năng suy luận và một chút may mắn để tìm ra những hộp quà bí mật.</p>
+  <h3>📌 Lưu ý khi tham gia trò chơi</h3>
+  <ol><li>Chọn một đáp án. Đối với câu tự luận: không dài quá 200 kí tự.</li><li>Sau khi nộp bài sẽ không được làm lại lần hai.</li><li>Quà sẽ được gửi qua trung gian: Huỳnh Kim Vy.</li><li>Bài làm phải đạt 8 điểm trở lên và trả lời đúng ít nhất một câu hỏi hộp quà.</li></ol>
+  <div class="notice"><b>⏰ Thời gian:</b> 20 phút<br><b>🏆 Điều kiện nhận quà:</b> Tối thiểu 8/12 điểm và đúng ít nhất một câu hỏi hộp quà.</div>
+ </div>
+ <div class="card"><h3>👤 Thông tin người chơi</h3><label for="playerName">Tên người chơi</label><input id="playerName" maxlength="50" placeholder="Nhập tên của bạn">
+ <button id="startBtn" class="primary" style="width:100%;margin-top:14px">🎄 BẮT ĐẦU TRÒ CHƠI</button><p class="muted">Mỗi người chỉ được nộp bài một lần. Bài làm được lưu trực tuyến để quản trị viên xem trên thiết bị khác.</p></div>
+</section>
+
+<section id="quiz" class="hidden">
+ <div class="card topline"><div><small class="muted">NGƯỜI CHƠI</small><div id="playerLabel" style="font-weight:800"></div></div><div style="text-align:right"><small class="muted">THỜI GIAN CÒN LẠI</small><div id="timer" class="timer">20:00</div></div></div>
+ <div class="progress"><span id="progress"></span></div><div class="topline muted"><span id="counter">Câu 1/12</span><span id="answered">Đã trả lời: 0/12</span></div>
+ <div class="card"><div class="topline"><span id="type" class="pill">TRẮC NGHIỆM</span><b id="giftLabel"></b></div><h3 id="questionText" style="margin-top:15px"></h3><div id="options"></div>
+ <div id="essayArea" class="hidden"><textarea id="essayAnswer" maxlength="200" rows="4" placeholder="Nhập câu trả lời (tối đa 200 kí tự)"></textarea><div class="muted" style="text-align:right"><span id="charCount">0</span>/200 kí tự</div><p id="hint" class="muted"></p></div></div>
+ <div class="row"><button id="prevBtn" class="plain">← Câu trước</button><button id="nextBtn" class="green">Câu tiếp →</button></div><button id="submitBtn" class="primary" style="width:100%;margin-top:12px">🎁 NỘP BÀI</button>
+ <p class="muted" style="text-align:center">Sau khi nộp, bạn không thể làm lại và sẽ không xem được điểm hay đáp án.</p>
+</section>
+
+<section id="done" class="hidden"><div class="card" style="text-align:center"><div style="font-size:48px">🎄🎅🏻🎁</div><h2>BẠN ĐÃ NỘP BÀI!</h2><p>Cảm ơn bạn đã tham gia. Kết quả sẽ được quản trị viên xem xét và chấm điểm.</p><p class="muted">Điểm số và đáp án không hiển thị cho người chơi.</p></div></section>
+
+<section id="admin" class="hidden">
+ <div class="topline"><h2>⚙️ Khu vực quản trị</h2><button id="logoutBtn" class="plain">Đăng xuất</button></div>
+ <div id="adminLogin" class="card"><h3>🔐 Đăng nhập quản trị</h3><p class="muted">Đăng nhập bằng tài khoản quản trị Firebase (được tạo trong bước cài đặt).</p><label>Email quản trị</label><input id="adminEmail" type="email" placeholder="Email quản trị"><label>Mật khẩu</label><input id="adminPassword" type="password" placeholder="Mật khẩu Firebase"><button id="loginBtn" class="primary" style="width:100%;margin-top:12px">Đăng nhập</button><p id="loginError" class="muted"></p></div>
+ <div id="adminPanel" class="hidden">
+  <div class="card"><div class="topline"><h3>📊 Tổng quan bài làm</h3><span id="submissionCount" class="pill">0 bài</span></div><p class="muted">Bài nộp được đồng bộ trực tuyến giữa các thiết bị.</p><div id="submissions"></div></div>
+  <div class="card"><h3>📝 Chỉnh sửa câu hỏi</h3><label>Chọn câu hỏi</label><select id="editSelect"></select><label>Loại câu hỏi</label><select id="editType"><option value="mc">Trắc nghiệm</option><option value="essay">Tự luận</option></select><label>Nội dung</label><textarea id="editQuestion" rows="3"></textarea><div id="editMc"><label>Các lựa chọn (mỗi dòng một lựa chọn)</label><textarea id="editOptions" rows="5"></textarea><label>Đáp án đúng (ghi đúng nội dung lựa chọn; nhiều đáp án cách nhau bằng dấu |)</label><input id="editCorrect"></div><div id="editEssay"><label>Gợi ý</label><input id="editHint"></div><label><input type="checkbox" id="editGift" style="width:auto"> Đây là câu hỏi hộp quà</label><button id="saveQuestion" class="green" style="width:100%;margin-top:12px">💾 Lưu thay đổi</button><p id="editStatus" class="muted"></p></div>
+  <div class="card"><h3>🏆 Bảng điểm</h3><div id="scoreTable"></div><button id="exportBtn" class="green" style="width:100%;margin-top:12px">📥 Xuất bảng điểm CSV</button></div>
+ </div>
+</section>
+<footer>🎄 Merry Christmas · Chúc bạn một mùa Giáng Sinh an lành! 🎄</footer>
+</main>
+<script>
+// 1) DÁN Firebase web config của dự án vào đây.
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyA8q4n38eDKKQQB6bqLkNMfT_N1Bqim5k4",
+  authDomain: "giang-sinh-quiz-9e8b4.firebaseapp.com",
+  databaseURL: "https://giang-sinh-quiz-9e8b4-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "giang-sinh-quiz-9e8b4",
+  storageBucket: "giang-sinh-quiz-9e8b4.firebasestorage.app",
+  messagingSenderId: "226450436466",
+  appId: "1:226450436466:web:4453cc7a3f551a720dadeb",
+  measurementId: "G-2ZEPBGDBLG"
+};
+// 2) UID của tài khoản quản trị Firebase (sẽ hiển thị sau khi tạo tài khoản).
+const ADMIN_UID = "uUIsbHZlPSVxiss6rXH8jOOsEoI3";
+
+const initialQuestions = [
+{type:"mc",q:"Giáng Sinh được tổ chức vào ngày nào?",opts:["Ngày 20 tháng 12","Ngày 24 tháng 12","Ngày 25 tháng 12","Ngày 31 tháng 12"],correct:["Ngày 25 tháng 12"],gift:false},
+{type:"mc",q:"Nghiệm của phương trình 2x + 5 = 15 là?",opts:["x = 3","x = 5","x = 10","x = 15"],correct:["x = 5"],gift:false},
+{type:"mc",q:"Ai thường được nhắc đến với hình ảnh phát quà trong đêm Giáng Sinh?",opts:["Skibidi","Ông già Noel","Chú lùn","Liên Quân Mobile"],correct:["Ông già Noel"],gift:false},
+{type:"mc",q:"Choose the word that has a different pronunciation?",opts:["Watches","Washes","Classes","Books"],correct:["Books"],gift:false},
+{type:"mc",q:"Hiện tượng khúc xạ ánh sáng diễn ra khi nào?",opts:["Truyền trong chân không.","Phản xạ trên gương.","Đổi hướng khi truyền xiên góc qua mặt phân cách hai môi trường.","Bị hấp thụ."],correct:["Đổi hướng khi truyền xiên góc qua mặt phân cách hai môi trường."],gift:false},
+{type:"essay",q:"Tôi khô. Nhưng tôi là thứ bạn cần khi bạn ướt.",hint:"",gift:false},
+{type:"mc",q:"Một điện trở có giá trị 6 ohm được mắc vào nguồn điện có hiệu điện thế 12V. Cường độ dòng điện chạy qua điện trở là bao nhiêu?",opts:["0,5 A","2 A","6 A","72 A"],correct:["2 A"],gift:false},
+{type:"mc",q:"Trong dao động điều hòa, vận tốc của vật đạt giá trị lớn nhất tại?",opts:["Biên dương","Biên âm","Vị trí cân bằng","Mọi vị trí đều như nhau"],correct:["Vị trí cân bằng"],gift:false},
+{type:"mc",q:"HTML được sử dụng chủ yếu để làm gì?",opts:["Thiết kế cấu trúc nội dung trang web","Tính toán dữ liệu","Quản lý hệ điều hành","Chỉnh sửa video"],correct:["Thiết kế cấu trúc nội dung trang web"],gift:false},
+{type:"essay",q:"Tôi luôn ở phía trước bạn nhưng bạn sẽ chẳng bao giờ có thể nhìn thấy tôi. Khi tôi đến, tôi không còn là tôi nữa. Tôi là gì?",hint:"Gợi ý: Tôi không phải đồ vật, không phải động vật, tôi là một khái niệm.",gift:false},
+{type:"mc",q:'Chọn 1 trong 4 hộp quà bằng cách giải mã câu đố: "Có gì đó kì lạ quanh đây. Ánh đèn chập chờn, những ánh nhìn vô định, ai đó đang âm thầm và tôi đang ở đây." Quy luật là gì?',opts:["1","2","3","4"],correct:["4"],gift:true},
+{type:"mc",q:'"Một đúng hai sai, hai sai một đúng." Tìm con số đúng.',opts:["1","2","3","4"],correct:["1","3"],gift:true}
+];
+const $=id=>document.getElementById(id);
+let db=null,auth=null,questions=initialQuestions.map(q=>({...q})),answers={},index=0,seconds=1200,timer=null,player="",currentSubmission=null,adminUser=null,unsub=null,submissions=[];
+function show(id){["home","quiz","done","admin"].forEach(x=>$(x).classList.toggle("hidden",x!==id))}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function configured(){return firebaseConfig.apiKey!=="YOUR_API_KEY"&&firebaseConfig.projectId!=="YOUR_PROJECT_ID"}
+function initFirebase(){if(!configured())throw Error("Trang chưa được kết nối Firebase. Hãy điền firebaseConfig trong file HTML theo hướng dẫn đi kèm.");if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);auth=firebase.auth();db=firebase.firestore()}
+function updateProgress(){let n=Object.values(answers).filter(v=>v!==""&&v!==null&&v!==undefined).length;$("answered").textContent=`Đã trả lời: ${n}/12`;$("progress").style.width=(n/12*100)+"%"}
+function renderQuestion(){let q=questions[index];$("counter").textContent=`Câu ${index+1}/12`;$("type").textContent=q.type==="mc"?"TRẮC NGHIỆM":"TỰ LUẬN";$("giftLabel").textContent=q.gift?"🎁 HỘP QUÀ":"";$("questionText").textContent=q.q;$("options").innerHTML="";$("options").classList.toggle("hidden",q.type!=="mc");$("essayArea").classList.toggle("hidden",q.type!=="essay");$("hint").textContent=q.hint||"";if(q.type==="mc")q.opts.forEach((o,i)=>{let l=document.createElement("label");l.className="choice";l.innerHTML=`<input type="radio" name="choice" value="${i}" ${answers[index]===i?"checked":""}><span><b>${"ABCD"[i]||i+1}.</b> ${esc(o)}</span>`;l.querySelector("input").onchange=()=>{answers[index]=i;updateProgress()};$("options").appendChild(l)});else{$("essayAnswer").value=answers[index]||"";$("charCount").textContent=($("essayAnswer").value||"").length}$("prevBtn").disabled=index===0;$("nextBtn").textContent=index===11?"Câu cuối":"Câu tiếp →";updateProgress()}
+$("essayAnswer").addEventListener("input",()=>{answers[index]=$("essayAnswer").value;$("charCount").textContent=$("essayAnswer").value.length;updateProgress()});
+$("prevBtn").onclick=()=>{if(questions[index].type==="essay")answers[index]=$("essayAnswer").value;if(index>0){index--;renderQuestion()}};
+$("nextBtn").onclick=()=>{if(questions[index].type==="essay")answers[index]=$("essayAnswer").value;if(index<11){index++;renderQuestion()}};
+async function loadQuestions(){let doc=await db.collection("settings").doc("quiz").get();if(doc.exists&&Array.isArray(doc.data().questions)&&doc.data().questions.length===12)questions=doc.data().questions}
+async function startQuiz(){player=$("playerName").value.trim();if(!player)return alert("Vui lòng nhập tên người chơi.");try{initFirebase();await auth.signInAnonymously();await loadQuestions();let playerDocId=encodeURIComponent(player.toLocaleLowerCase("vi"));answers={};index=0;seconds=1200;$("playerLabel").textContent=player;show("quiz");renderQuestion();clearInterval(timer);timer=setInterval(()=>{seconds--;let m=Math.floor(seconds/60),s=seconds%60;$("timer").textContent=String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");if(seconds<=0){clearInterval(timer);submitQuiz(true)}},1000)}catch(e){alert(e.message)}}
+$("startBtn").onclick=startQuiz;
+async function submitQuiz(auto=false){if(!auto&&!confirm("Bạn chắc chắn muốn nộp bài? Bạn không thể làm lại."))return;if(questions[index].type==="essay")answers[index]=$("essayAnswer").value;if(questions.some((q,i)=>q.type==="essay"&&String(answers[i]||"").length>200))return alert("Câu tự luận không được quá 200 kí tự.");clearInterval(timer);$("submitBtn").disabled=true;try{let payload={name:player,playerKey:player.toLocaleLowerCase("vi"),answers:questions.map((q,i)=>({answer:answers[i]??null})),createdAt:firebase.firestore.FieldValue.serverTimestamp(),graded:false,score:null};let ref=db.collection("submissions").doc(encodeURIComponent(player.toLocaleLowerCase("vi")));await ref.set(payload);currentSubmission=ref.id;show("done")}catch(e){alert("Không gửi được bài: "+e.message);$("submitBtn").disabled=false}}
+$("submitBtn").onclick=()=>submitQuiz(false);
+$("adminToggle").onclick=()=>{show("admin");$("adminLogin").classList.toggle("hidden",!!adminUser);$("adminPanel").classList.toggle("hidden",!adminUser)};
+$("loginBtn").onclick=async()=>{try{initFirebase();let cred=await auth.signInWithEmailAndPassword($("adminEmail").value.trim(),$("adminPassword").value);if(cred.user.uid!==ADMIN_UID){await auth.signOut();throw Error("Tài khoản này không có quyền quản trị.");}adminUser=cred.user;$("adminLogin").classList.add("hidden");$("adminPanel").classList.remove("hidden");await loadQuestions();fillEditor();listenSubmissions()}catch(e){$("loginError").textContent=e.message}};
+$("logoutBtn").onclick=async()=>{if(unsub)unsub();unsub=null;adminUser=null;if(auth)await auth.signOut();show("home")};
+function fillEditor(){$("editSelect").innerHTML=questions.map((q,i)=>`<option value="${i}">Câu ${i+1}</option>`).join("");loadEditor()}
+function loadEditor(){let q=questions[+$("editSelect").value||0];$("editType").value=q.type;$("editQuestion").value=q.q;$("editOptions").value=(q.opts||[]).join("\n");$("editCorrect").value=(q.correct||[]).join(" | ");$("editHint").value=q.hint||"";$("editGift").checked=!!q.gift;toggleEditor()}
+function toggleEditor(){let mc=$("editType").value==="mc";$("editMc").classList.toggle("hidden",!mc);$("editEssay").classList.toggle("hidden",mc)}
+$("editSelect").onchange=loadEditor;$("editType").onchange=toggleEditor;
+$("saveQuestion").onclick=async()=>{let i=+$("editSelect").value,q={type:$("editType").value,q:$("editQuestion").value.trim(),gift:$("editGift").checked};if(!q.q)return alert("Nhập nội dung câu hỏi.");if(q.type==="mc"){q.opts=$("editOptions").value.split("\n").map(x=>x.trim()).filter(Boolean);q.correct=$("editCorrect").value.split("|").map(x=>x.trim()).filter(Boolean);if(q.opts.length<2||!q.correct.length)return alert("Cần ít nhất 2 lựa chọn và đáp án đúng.")}else q.hint=$("editHint").value.trim();questions[i]=q;try{await db.collection("settings").doc("quiz").set({questions,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});$("editStatus").textContent="✓ Đã lưu lên cơ sở dữ liệu trực tuyến."}catch(e){alert("Không lưu được: "+e.message)}};
+function listenSubmissions(){if(unsub)unsub();unsub=db.collection("submissions").orderBy("createdAt","desc").onSnapshot(s=>{submissions=s.docs.map(d=>({id:d.id,...d.data()}));renderAdminData()},e=>alert("Không thể đọc bài nộp: "+e.message))}
+function renderAdminData(){$("submissionCount").textContent=submissions.length+" bài";$("submissions").innerHTML=submissions.length?submissions.map(r=>`<div class="qbox"><b>${esc(r.name)}</b><div class="muted">${r.graded?"Đã chấm":"Chưa chấm"}</div><button class="green gradeBtn" data-id="${r.id}" style="margin-top:8px">Xem bài & chấm điểm</button></div>`).join(""):"<p class='muted'>Chưa có bài nộp.</p>";document.querySelectorAll(".gradeBtn").forEach(b=>b.onclick=()=>gradeSubmission(b.dataset.id));renderScores()}
+async function gradeSubmission(id){let r=submissions.find(x=>x.id===id);if(!r)return;let marks={...(r.marks||{})};let html=questions.map((q,i)=>{let ans=r.answers?.[i]?.answer;let chosen=q.type==="mc"?(Number.isInteger(ans)?q.opts[ans]:"Chưa trả lời"):(ans||"Chưa trả lời");let auto=q.type==="mc"&&q.correct.includes(chosen);return `<div class="qbox"><b>Câu ${i+1}${q.gift?" 🎁":""}</b><p>${esc(q.q)}</p><small>Trả lời: ${esc(chosen)}</small>${q.type==="mc"?`<p class="muted">Đáp án: ${esc(q.correct.join(" / "))} · ${auto?"Đúng":"Sai"}</p>`:""}<label>Điểm câu này (0 hoặc 1)</label><select id="mark${i}"><option value="0">0 điểm</option><option value="1" ${((marks[i]??(auto?1:0))===1)?"selected":""}>1 điểm</option></select></div>`}).join("");let wrap=document.createElement("div");wrap.className="card";wrap.innerHTML=`<h3>Chấm bài: ${esc(r.name)}</h3>${html}<label>Ghi chú</label><textarea id="gradeNote">${esc(r.note||"")}</textarea><button id="saveGrade" class="primary" style="width:100%;margin-top:12px">Lưu điểm</button>`;$("adminPanel").prepend(wrap);$("saveGrade").onclick=async()=>{let newMarks={};questions.forEach((q,i)=>newMarks[i]=+$("mark"+i).value);let score=Object.values(newMarks).reduce((a,b)=>a+b,0),gift=questions.some((q,i)=>q.gift&&newMarks[i]===1);await db.collection("submissions").doc(id).update({marks:newMarks,score,graded:true,giftPassed:gift,eligible:score>=8&&gift,note:$("gradeNote").value});wrap.remove();alert(`Đã lưu ${score}/12 điểm. ${score>=8&&gift?"Đủ điều kiện nhận quà.":"Chưa đủ điều kiện nhận quà."}`)}}
+function renderScores(){$("scoreTable").innerHTML=submissions.length?`<div style="overflow-x:auto"><table><thead><tr><th>Tên người chơi</th><th>Điểm</th><th>Số câu đúng</th><th>Kết quả</th></tr></thead><tbody>${submissions.map(r=>`<tr><td>${esc(r.name)}</td><td>${r.graded?r.score+"/12":"—"}</td><td>${r.graded?Object.values(r.marks||{}).filter(x=>x===1).length:"—"}</td><td>${r.graded?(r.eligible?"Đạt":"Chưa đạt"):"Chưa chấm"}</td></tr>`).join("")}</tbody></table></div>`:"<p class='muted'>Chưa có bài làm.</p>"}
+$("exportBtn").onclick=()=>{let rows=[["Tên người chơi","Tổng điểm","Số câu đúng","Đúng câu hộp quà","Kết quả"],...submissions.filter(r=>r.graded).map(r=>[r.name,r.score+"/12",Object.values(r.marks||{}).filter(x=>x===1).length,r.giftPassed?"Có":"Không",r.eligible?"Đạt":"Chưa đạt"])];let csv="\uFEFF"+rows.map(row=>row.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(",")).join("\r\n");let a=document.createElement("a"),u=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.href=u;a.download="Bang_diem_Giang_Sinh.csv";a.click();URL.revokeObjectURL(u)};
+})();
+</script>
+</body></html>
