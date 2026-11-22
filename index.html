@@ -60,7 +60,9 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:12px}
  <div id="adminLogin" class="card"><h3>🔐 Đăng nhập quản trị</h3><p class="muted">Đăng nhập bằng tài khoản quản trị Firebase (được tạo trong bước cài đặt).</p><label>Email quản trị</label><input id="adminEmail" type="email" placeholder="Email quản trị"><label>Mật khẩu</label><input id="adminPassword" type="password" placeholder="Mật khẩu Firebase"><button id="loginBtn" class="primary" style="width:100%;margin-top:12px">Đăng nhập</button><p id="loginError" class="muted"></p></div>
  <div id="adminPanel" class="hidden">
   <div class="card"><div class="topline"><h3>📊 Tổng quan bài làm</h3><span id="submissionCount" class="pill">0 bài</span></div><p class="muted">Bài nộp được đồng bộ trực tuyến giữa các thiết bị.</p><div id="submissions"></div></div>
-  <div class="card"><h3>📝 Chỉnh sửa câu hỏi</h3><label>Chọn câu hỏi</label><select id="editSelect"></select><label>Loại câu hỏi</label><select id="editType"><option value="mc">Trắc nghiệm</option><option value="essay">Tự luận</option></select><label>Nội dung</label><textarea id="editQuestion" rows="3"></textarea><div id="editMc"><label>Các lựa chọn (mỗi dòng một lựa chọn)</label><textarea id="editOptions" rows="5"></textarea><label>Đáp án đúng (ghi đúng nội dung lựa chọn; nhiều đáp án cách nhau bằng dấu |)</label><input id="editCorrect"></div><div id="editEssay"><label>Gợi ý</label><input id="editHint"></div><label><input type="checkbox" id="editGift" style="width:auto"> Đây là câu hỏi hộp quà</label><button id="saveQuestion" class="green" style="width:100%;margin-top:12px">💾 Lưu thay đổi</button><p id="editStatus" class="muted"></p></div>
+  <div class="card"><h3>📝 Chỉnh sửa câu hỏi</h3><label>Chọn câu hỏi</label><select id="editSelect"></select><label>Loại câu hỏi</label><select id="editType"><option value="mc">Trắc nghiệm</option><option value="essay">Tự luận</option></select><label>Nội dung</label><textarea id="editQuestion" rows="3"></textarea><div id="editMc"><label>Các lựa chọn (mỗi dòng một lựa chọn)</label><textarea id="editOptions" rows="5"></textarea><label>Đáp án đúng (ghi đúng nội dung lựa chọn; nhiều đáp án cách nhau bằng dấu |)</label><input id="editCorrect"></div><div id="editEssay"><label>Gợi ý</label><input id="editHint"></div><label><input type="checkbox" id="editGift" style="width:auto"> Đây là câu hỏi hộp quà</label><button id="saveQuestion" class="green" style="width:100%;margin-top:12px">💾 Lưu thay đổi</button><button id="addQuestion" class="primary" style="width:100%;margin-top:8px">
+  ➕ Thêm câu hỏi mới
+  </button><p id="editStatus" class="muted"></p></div>
   <div class="card"><h3>🏆 Bảng điểm</h3><div id="scoreTable"></div><button id="exportBtn" class="green" style="width:100%;margin-top:12px">📥 Xuất bảng điểm CSV</button></div>
  </div>
 </section>
@@ -120,6 +122,55 @@ function loadEditor(){let q=questions[+$("editSelect").value||0];$("editType").v
 function toggleEditor(){let mc=$("editType").value==="mc";$("editMc").classList.toggle("hidden",!mc);$("editEssay").classList.toggle("hidden",mc)}
 $("editSelect").onchange=loadEditor;$("editType").onchange=toggleEditor;
 $("saveQuestion").onclick=async()=>{let i=+$("editSelect").value,q={type:$("editType").value,q:$("editQuestion").value.trim(),gift:$("editGift").checked};if(!q.q)return alert("Nhập nội dung câu hỏi.");if(q.type==="mc"){q.opts=$("editOptions").value.split("\n").map(x=>x.trim()).filter(Boolean);q.correct=$("editCorrect").value.split("|").map(x=>x.trim()).filter(Boolean);if(q.opts.length<2||!q.correct.length)return alert("Cần ít nhất 2 lựa chọn và đáp án đúng.")}else q.hint=$("editHint").value.trim();questions[i]=q;try{await db.collection("settings").doc("quiz").set({questions,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});$("editStatus").textContent="✓ Đã lưu lên cơ sở dữ liệu trực tuyến."}catch(e){alert("Không lưu được: "+e.message)}};
+ $("addQuestion").onclick=async()=>{
+  let q={
+    type:$("editType").value,
+    q:$("editQuestion").value.trim(),
+    gift:$("editGift").checked
+  };
+
+  if(!q.q){
+    alert("Vui lòng nhập nội dung câu hỏi.");
+    return;
+  }
+
+  if(q.type==="mc"){
+    q.opts=$("editOptions").value
+      .split("\n").map(x=>x.trim()).filter(Boolean);
+
+    q.correct=$("editCorrect").value
+      .split("|").map(x=>x.trim()).filter(Boolean);
+
+    if(q.opts.length<2||!q.correct.length){
+      alert("Cần ít nhất 2 lựa chọn và đáp án đúng.");
+      return;
+    }
+  }else{
+    q.hint=$("editHint").value.trim();
+  }
+
+  try{
+    questions.push(q);
+
+    await db.collection("settings").doc("quiz").set({
+      questions,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    $("editSelect").innerHTML=questions.map((x,i)=>
+      `<option value="${i}">Câu ${i+1}</option>`
+    ).join("");
+
+    $("editSelect").value=questions.length-1;
+
+    $("editStatus").textContent="✓ Đã thêm câu hỏi mới thành công!";
+
+    alert("Đã thêm câu hỏi mới!");
+  }catch(e){
+    questions.pop();
+    alert("Không thể thêm câu hỏi: "+e.message);
+  }
+};
 function listenSubmissions(){if(unsub)unsub();unsub=db.collection("submissions").orderBy("createdAt","desc").onSnapshot(s=>{submissions=s.docs.map(d=>({id:d.id,...d.data()}));renderAdminData()},e=>alert("Không thể đọc bài nộp: "+e.message))}
 function renderAdminData(){
   $("submissionCount").textContent=submissions.length+" bài";
